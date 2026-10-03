@@ -18,7 +18,7 @@ pnpm dev
 
 The Dockerfile builds a PostgreSQL 17 image; Compose binds it only to localhost and stores data in a named volume. `pnpm --filter website db:down` stops it without deleting data. Schema changes use `drizzle-kit push`, with no migration SQL files.
 
-The env example is only for local use. Generate a real secret using `openssl rand -base64 32` before deploying. A generated local secret is kept in the ignored `.env.local` for the current checkout.
+The env example contains a public development-only signing key: never copy that value into any deployed environment. Generate a private secret using `openssl rand -base64 32` and set `BETTER_AUTH_SECRET` in Vercel before deploying.
 
 ## Routes and behavior
 
@@ -43,6 +43,7 @@ Setup completion is stored in `tenants.setup_version`, rather than trusting a cl
 ```sh
 pnpm check
 pnpm --filter website typecheck
+pnpm --filter website test:db-push
 pnpm --filter website test:db
 pnpm build # pushes the configured database schema before building
 ```
@@ -57,13 +58,17 @@ Set the Vercel project Root Directory to `website`, using the Next.js preset. Co
 - `BETTER_AUTH_SECRET`: a generated secret with at least 32 characters.
 - `BETTER_AUTH_URL`: the canonical deployment origin, including `https://`.
 
-The build command is `pnpm run db:push && next build`. Every deployment pushes `lib/schema.ts` to its assigned database before building; a failed push stops the build. Drizzle uses `DATABASE_URL_UNPOOLED` when available for schema changes, while the app uses pooled `DATABASE_URL`.
+The build command is `pnpm run db:push && next build`. Every deployment pushes `lib/schema.ts` to its assigned database before building; a failed push stops the build. Drizzle uses `DATABASE_URL_UNPOOLED` when available for schema changes, while the app requires pooled `DATABASE_URL`. Missing `DATABASE_URL` fails with a configuration error in every environment, without falling back to localhost.
 
 In the Neon resource's **Projects → Update Project Connection** settings, enable **Create Database Branch For Deployment → Preview** and leave Production unchecked. Neon creates an isolated branch and injects its connection URLs before each preview build. Production builds push the main database. Database branches are not merged: production applies the schema from the code deployed to production.
 
 Local development uses Docker Postgres and `.env.local`; it needs no Neon credentials. Run `pnpm --filter website db:push` after changing the schema. Local `pnpm build` also pushes the configured local database.
 
-For changes that remove columns/tables, change types, or rename structures, inspect the SQL first with `pnpm --filter website db:plan` against the intended database. Drizzle 1.0 RC can apply destructive changes unattended in CI, even without `--force`. Production schema changes happen before the new deployment is ready, so keep them compatible with the running app; a later build failure does not roll back the database.
+Production and CI pushes first inspect Drizzle's JSON dry run. Only new tables and their constraints, new schemas/enums, nullable columns, and nonunique indexes can run automatically. Alterations, drops, required columns, constraints on existing tables, warnings, and unknown operations stop the build before the push. An advisory lock serializes guarded builds against the same database. Preview branches and local development use Drizzle's normal push workflow. Keep **Enable access to System Environment Variables** enabled in Vercel (verified enabled for this project).
+
+Drizzle 1.0 RC blocks some populated-table/column drops and renames in noninteractive CI with `missing_hints` (exit code 2), but can still apply type changes and drops from empty tables without confirmation. The compatibility check protects production from those changes too.
+
+For a change blocked by the compatibility check, inspect `pnpm --filter website db:plan` against the intended database. Use an expand/contract sequence that keeps the running app working, then explicitly run `pnpm --filter website db:push:force` with that database's credentials only after reviewing the SQL and deployment timing. Never add `--force` to the build command. Schema changes happen before the new deployment is ready; a later build failure does not roll them back.
 
 No generated migration files or custom branch-management scripts are required. Vercel's build environment receives the Neon secrets directly; local development does not need to download them.
 
