@@ -1,8 +1,33 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { spawnSync } from "node:child_process";
 import { isCompatiblePlan } from "./schema-plan.mjs";
 
 const plan = (...statements) => ({ status: "ok", statements, hints: [] });
+
+await test("guarded pushes reject a missing direct URL before connecting to the pooled URL", () => {
+  for (const directURL of [undefined, ""]) {
+    const env = {
+      ...process.env,
+      VERCEL: "1",
+      VERCEL_ENV: "production",
+      DATABASE_URL: "postgresql://user:password@ep-test-pooler.invalid/db",
+    };
+    if (directURL === undefined) delete env.DATABASE_URL_UNPOOLED;
+    else env.DATABASE_URL_UNPOOLED = directURL;
+    const result = spawnSync(
+      process.execPath,
+      [new URL("./push-db.mjs", import.meta.url).pathname],
+      {
+        env,
+        encoding: "utf8",
+      },
+    );
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Set DATABASE_URL_UNPOOLED to a direct PostgreSQL connection/);
+    assert.doesNotMatch(result.stderr, /ENOTFOUND|ECONNREFUSED/);
+  }
+});
 
 await test("initial schema and its new-table constraints are allowed", () => {
   assert.equal(

@@ -14,8 +14,13 @@ if (!guarded) {
   if (!process.env.DATABASE_URL) {
     throw new Error("Connect Neon and set DATABASE_URL before building.");
   }
+  if (!process.env.DATABASE_URL_UNPOOLED) {
+    throw new Error(
+      "Set DATABASE_URL_UNPOOLED to a direct PostgreSQL connection before a guarded build; session advisory locks cannot use a transaction pooler.",
+    );
+  }
   const client = new Client({
-    connectionString: process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL_UNPOOLED,
   });
   await client.connect();
   try {

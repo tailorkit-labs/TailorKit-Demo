@@ -55,6 +55,7 @@ The DB integration test covers real anonymous authentication, cookies, concurren
 Set the Vercel project Root Directory to `website`, using the Next.js preset. Configure:
 
 - `DATABASE_URL`: a Neon PostgreSQL connection URL (include `sslmode=require`; a pooled URL is suitable).
+- `DATABASE_URL_UNPOOLED`: the direct PostgreSQL connection URL, required for guarded production/CI pushes so the session advisory lock stays on one backend. Neon supplies this automatically through the Vercel integration.
 - `BETTER_AUTH_SECRET`: a generated secret with at least 32 characters, configured for both Preview and Production. These environments use separate keys.
 - `BETTER_AUTH_URL`: optionally override the production origin, including `https://`. Otherwise the Vercel production domain is used. Previews use their exact deployment and Git branch hostnames, so no per-preview URL setting is required.
 
