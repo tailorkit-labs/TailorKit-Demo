@@ -4,7 +4,7 @@ import { isCompatiblePlan } from "./schema-plan.mjs";
 
 const plan = (...statements) => ({ status: "ok", statements, hints: [] });
 
-test("initial schema and its new-table constraints are allowed", () => {
+await test("initial schema and its new-table constraints are allowed", () => {
   assert.equal(
     isCompatiblePlan(
       plan(
@@ -17,7 +17,7 @@ test("initial schema and its new-table constraints are allowed", () => {
   );
 });
 
-test("nullable columns and nonunique indexes preserve existing writes", () => {
+await test("nullable columns and nonunique indexes preserve existing writes", () => {
   assert.equal(
     isCompatiblePlan(
       plan(
@@ -30,7 +30,7 @@ test("nullable columns and nonunique indexes preserve existing writes", () => {
   assert.equal(isCompatiblePlan({ status: "no_changes" }), true);
 });
 
-test("potentially incompatible changes and unknown operations are rejected", () => {
+await test("potentially incompatible changes and unknown operations are rejected", () => {
   for (const statement of [
     { type: "alter_column", diff: { type: { from: "numeric", to: "integer" } } },
     { type: "drop_column" },
@@ -46,7 +46,7 @@ test("potentially incompatible changes and unknown operations are rejected", () 
   }
 });
 
-test("warnings, missing confirmations, and malformed plans fail closed", () => {
+await test("warnings, missing confirmations, and malformed plans fail closed", () => {
   assert.equal(isCompatiblePlan({ ...plan(), hints: [{ hint: "data loss" }] }), false);
   assert.equal(isCompatiblePlan({ status: "missing_hints" }), false);
   assert.equal(isCompatiblePlan({ status: "ok" }), false);
