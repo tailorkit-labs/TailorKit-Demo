@@ -55,8 +55,8 @@ The DB integration test covers real anonymous authentication, cookies, concurren
 Set the Vercel project Root Directory to `website`, using the Next.js preset. Configure:
 
 - `DATABASE_URL`: a Neon PostgreSQL connection URL (include `sslmode=require`; a pooled URL is suitable).
-- `BETTER_AUTH_SECRET`: a generated secret with at least 32 characters.
-- `BETTER_AUTH_URL`: the canonical deployment origin, including `https://`.
+- `BETTER_AUTH_SECRET`: a generated secret with at least 32 characters, configured for both Preview and Production. These environments use separate keys.
+- `BETTER_AUTH_URL`: optionally override the production origin, including `https://`. Otherwise the Vercel production domain is used. Previews use their exact deployment and Git branch hostnames, so no per-preview URL setting is required.
 
 The build command is `pnpm run db:push && next build`. Every deployment pushes `lib/schema.ts` to its assigned database before building; a failed push stops the build. Drizzle uses `DATABASE_URL_UNPOOLED` when available for schema changes, while the app requires pooled `DATABASE_URL`. Missing `DATABASE_URL` fails with a configuration error in every environment, without falling back to localhost.
 
