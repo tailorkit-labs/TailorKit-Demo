@@ -44,7 +44,7 @@ Setup completion is stored in `tenants.setup_version`, rather than trusting a cl
 pnpm check
 pnpm --filter website typecheck
 pnpm --filter website test:db
-pnpm build
+pnpm build # pushes the configured database schema before building
 ```
 
 The DB integration test covers real anonymous authentication, cookies, concurrent provisioning, validated CRUD, tenant isolation, and racing requests for the last available record slot. It removes all accounts it creates. Browser verification covers setup, navigation, forms, persistence, filters, and responsive layouts.
@@ -57,6 +57,14 @@ Set the Vercel project Root Directory to `website`, using the Next.js preset. Co
 - `BETTER_AUTH_SECRET`: a generated secret with at least 32 characters.
 - `BETTER_AUTH_URL`: the canonical deployment origin, including `https://`.
 
-The node-postgres Drizzle driver works with both local Postgres and Neon. Push the schema against the intended Neon database with `DATABASE_URL` set before serving the app. No Vercel or Neon resources are provisioned by this repo.
+The build command is `pnpm run db:push && next build`. Every deployment pushes `lib/schema.ts` to its assigned database before building; a failed push stops the build. Drizzle uses `DATABASE_URL_UNPOOLED` when available for schema changes, while the app uses pooled `DATABASE_URL`.
+
+In the Neon resource's **Projects → Update Project Connection** settings, enable **Create Database Branch For Deployment → Preview** and leave Production unchecked. Neon creates an isolated branch and injects its connection URLs before each preview build. Production builds push the main database. Database branches are not merged: production applies the schema from the code deployed to production.
+
+Local development uses Docker Postgres and `.env.local`; it needs no Neon credentials. Run `pnpm --filter website db:push` after changing the schema. Local `pnpm build` also pushes the configured local database.
+
+For changes that remove columns/tables, change types, or rename structures, inspect the SQL first with `pnpm --filter website db:plan` against the intended database. Drizzle 1.0 RC can apply destructive changes unattended in CI, even without `--force`. Production schema changes happen before the new deployment is ready, so keep them compatible with the running app; a later build failure does not roll back the database.
+
+No generated migration files or custom branch-management scripts are required. Vercel's build environment receives the Neon secrets directly; local development does not need to download them.
 
 This is a bounded demo workspace, not a full production account system. Per-workspace record limits do not provide a global storage budget: cookie resets can create additional anonymous accounts. Add expiry cleanup or a global account budget before exposing it to sustained public traffic.

@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm run db:push && next build",
     "start": "next start",
     "lint": "vp lint .",
     "format": "vp fmt .",
     "typecheck": "tsc --noEmit",
     "db:push": "drizzle-kit push",
+    "db:plan": "drizzle-kit push --explain --verbose",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "test:db": "tsx scripts/test-db.ts"
