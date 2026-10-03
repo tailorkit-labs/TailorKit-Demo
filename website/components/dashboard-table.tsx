@@ -195,7 +195,12 @@ export function DashboardTable({ workspace }: { workspace: Workspace }) {
                       })}
                     </TableCell>
                     <TableCell>
-                      <RecordDialog kind="deal" workspace={workspace} deal={deal} />
+                      <RecordDialog
+                        kind="deal"
+                        workspace={workspace}
+                        deal={deal}
+                        triggerLabel="Edit"
+                      />
                     </TableCell>
                   </TableRow>
                 );
