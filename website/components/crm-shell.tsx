@@ -22,7 +22,7 @@ export function CrmShell({ children, name }: { children: React.ReactNode; name: 
           key={pathname}
           ref={setHeader}
           data-slot="page-navbar"
-          className="z-10 shrink-0 border-b border-transparent bg-background px-5 py-3.5 transition-colors empty:hidden data-[scrolled=true]:border-border md:px-8"
+          className="z-10 shrink-0 border-b border-transparent bg-background px-5 py-3.5 transition-[border-color] empty:hidden data-[scrolled=true]:border-border md:px-8"
         />
         <PageHeaderContext value={header}>
           <div
