@@ -8,6 +8,7 @@ import { provisionWorkspace } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const MIN_STEP_DISPLAY_MS = 1_000;
@@ -77,6 +78,10 @@ export function DemoSetup() {
             <CardTitle>Setting up your demo</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
+            <Progress
+              value={step >= 2 ? 100 : step === 1 ? 55 : 15}
+              aria-label="Workspace setup progress"
+            />
             <div role="status" aria-live="polite" className="flex flex-col gap-4">
               {["Create your anonymous account", "Prepare your contacts, deals, and tasks"].map(
                 (label, i) => (
