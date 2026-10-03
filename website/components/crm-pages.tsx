@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Workspace, Contact, Deal, Task } from "@/lib/workspace";
-import { companyHref } from "@/lib/companies";
 import {
   addNote,
   deleteContact,
@@ -136,7 +135,7 @@ function ErrorMessage({ error }: { error: string }) {
     </Alert>
   ) : null;
 }
-export function NoResults({
+function NoResults({
   title = "Nothing here yet",
   description = "Add a record to get started.",
 }: {
@@ -155,7 +154,7 @@ export function NoResults({
     </Empty>
   );
 }
-export function ContactLink({ contact }: { contact?: Contact }) {
+function ContactLink({ contact }: { contact?: Contact }) {
   return contact ? (
     <Link
       href={"/contacts/" + contact.id}
@@ -270,7 +269,7 @@ export function TaskRow({ task, workspace }: { task: Task; workspace: Workspace 
     </div>
   );
 }
-export function DealCard({ deal, workspace }: { deal: Deal; workspace: Workspace }) {
+function DealCard({ deal, workspace }: { deal: Deal; workspace: Workspace }) {
   const mutation = useMutation();
   return (
     <Card>
@@ -470,13 +469,9 @@ function Contacts({ workspace }: { workspace: Workspace }) {
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
-                    <Link
-                      href={companyHref(contact.company)}
-                      className="truncate font-medium hover:underline"
-                      title={contact.company}
-                    >
+                    <span className="truncate font-medium" title={contact.company}>
                       {contact.company}
-                    </Link>
+                    </span>
                     <span className="truncate text-xs text-muted-foreground">{contact.role}</span>
                   </div>
                 </TableCell>
@@ -596,11 +591,7 @@ function ContactDetail({ workspace, contact }: { workspace: Workspace; contact: 
             <CardHeader>
               <ContactAvatar contact={contact} className="size-10" />
               <CardTitle>{contact.name}</CardTitle>
-              <CardDescription>
-                <Link href={companyHref(contact.company)} className="hover:underline">
-                  {contact.company}
-                </Link>
-              </CardDescription>
+              <CardDescription>{contact.company}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <Badge variant="outline">{label(contact.status)}</Badge>
