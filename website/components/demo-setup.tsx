@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { CheckIcon, CommandIcon } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { provisionWorkspace } from "@/lib/actions";
@@ -70,8 +71,21 @@ export function DemoSetup() {
     >
       <div className="flex w-full max-w-md flex-col gap-8">
         <div className="flex items-center justify-center gap-2">
-          <CommandIcon className="size-6" />
-          <span className="text-xl font-semibold tracking-tight">Forma</span>
+          <Image
+            src="/brand/tailorkit-mark-light.svg"
+            alt=""
+            width={24}
+            height={24}
+            className="shrink-0 dark:hidden"
+          />
+          <Image
+            src="/brand/tailorkit-mark-dark.svg"
+            alt=""
+            width={24}
+            height={24}
+            className="hidden shrink-0 dark:block"
+          />
+          <span className="text-xl font-semibold tracking-tight">TailorKit</span>
         </div>
         <Card>
           <CardHeader className="items-center text-center">
