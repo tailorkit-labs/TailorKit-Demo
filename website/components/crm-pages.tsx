@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Workspace, Contact, Deal, Task } from "@/lib/workspace";
+import { companyHref } from "@/lib/companies";
 import {
   addNote,
   deleteContact,
@@ -135,7 +136,7 @@ function ErrorMessage({ error }: { error: string }) {
     </Alert>
   ) : null;
 }
-function NoResults({
+export function NoResults({
   title = "Nothing here yet",
   description = "Add a record to get started.",
 }: {
@@ -154,7 +155,7 @@ function NoResults({
     </Empty>
   );
 }
-function ContactLink({ contact }: { contact?: Contact }) {
+export function ContactLink({ contact }: { contact?: Contact }) {
   return contact ? (
     <Link
       href={"/contacts/" + contact.id}
@@ -269,7 +270,7 @@ export function TaskRow({ task, workspace }: { task: Task; workspace: Workspace 
     </div>
   );
 }
-function DealCard({ deal, workspace }: { deal: Deal; workspace: Workspace }) {
+export function DealCard({ deal, workspace }: { deal: Deal; workspace: Workspace }) {
   const mutation = useMutation();
   return (
     <Card>
@@ -469,9 +470,13 @@ function Contacts({ workspace }: { workspace: Workspace }) {
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
-                    <span className="truncate font-medium" title={contact.company}>
+                    <Link
+                      href={companyHref(contact.company)}
+                      className="truncate font-medium hover:underline"
+                      title={contact.company}
+                    >
                       {contact.company}
-                    </span>
+                    </Link>
                     <span className="truncate text-xs text-muted-foreground">{contact.role}</span>
                   </div>
                 </TableCell>
@@ -591,7 +596,11 @@ function ContactDetail({ workspace, contact }: { workspace: Workspace; contact: 
             <CardHeader>
               <ContactAvatar contact={contact} className="size-10" />
               <CardTitle>{contact.name}</CardTitle>
-              <CardDescription>{contact.company}</CardDescription>
+              <CardDescription>
+                <Link href={companyHref(contact.company)} className="hover:underline">
+                  {contact.company}
+                </Link>
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <Badge variant="outline">{label(contact.status)}</Badge>
@@ -633,7 +642,10 @@ function ContactDetail({ workspace, contact }: { workspace: Workspace; contact: 
               {tasks.length ? (
                 tasks.map((task) => <TaskRow key={task.id} task={task} workspace={workspace} />)
               ) : (
-                <NoResults title="No follow-ups" description="Add a follow-up from Inbox." />
+                <NoResults
+                  title="No follow-ups"
+                  description="Add a follow-up to plan your next step."
+                />
               )}
             </CardContent>
           </Card>
@@ -740,6 +752,31 @@ function ContactDetail({ workspace, contact }: { workspace: Workspace; contact: 
     </>
   );
 }
+function Tasks({ workspace }: { workspace: Workspace }) {
+  return (
+    <>
+      <PageHeading title="Follow-ups">
+        <RecordDialog kind="task" workspace={workspace} />
+      </PageHeading>
+      <Card>
+        <CardHeader>
+          <CardTitle>Workspace follow-ups</CardTitle>
+          <CardDescription>Keep track of the next step across every relationship.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {workspace.tasks.length ? (
+            workspace.tasks.map((task) => (
+              <TaskRow key={task.id} task={task} workspace={workspace} />
+            ))
+          ) : (
+            <NoResults title="No follow-ups" description="Add a follow-up to get started." />
+          )}
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
 function Settings({ workspace }: { workspace: Workspace }) {
   const usage = [
     { name: "Contacts", count: workspace.contacts.length },
@@ -777,7 +814,7 @@ export function CrmPages({
   contactId,
 }: {
   workspace: Workspace;
-  view: "overview" | "contacts" | "pipeline" | "settings";
+  view: "overview" | "contacts" | "pipeline" | "tasks" | "settings";
   contactId?: string;
 }) {
   if (contactId) {
@@ -796,6 +833,8 @@ export function CrmPages({
       return <Contacts workspace={workspace} />;
     case "pipeline":
       return <Pipeline workspace={workspace} />;
+    case "tasks":
+      return <Tasks workspace={workspace} />;
     case "settings":
       return <Settings workspace={workspace} />;
     default:

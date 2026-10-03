@@ -43,6 +43,7 @@ export function RecordDialog({
   contact,
   deal,
   defaultContactId,
+  defaultCompany,
   defaultDueDate,
   trigger,
   triggerLabel,
@@ -54,6 +55,7 @@ export function RecordDialog({
   contact?: Contact;
   deal?: Deal;
   defaultContactId?: string;
+  defaultCompany?: string;
   defaultDueDate?: string;
   trigger?: React.ReactElement | null;
   triggerLabel?: string;
@@ -196,7 +198,7 @@ export function RecordDialog({
                         name="company"
                         required
                         maxLength={80}
-                        defaultValue={contact?.company}
+                        defaultValue={contact?.company ?? defaultCompany}
                       />
                     </Field>
                     <Field>

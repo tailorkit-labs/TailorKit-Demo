@@ -15,7 +15,8 @@
     "test:db-push": "node --test scripts/schema-plan.test.mjs scripts/read-schema-plan.test.mjs",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
-    "test:db": "tsx scripts/test-db.ts"
+    "test:db": "tsx scripts/test-db.ts",
+    "test:companies": "node --import tsx --test scripts/companies.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
