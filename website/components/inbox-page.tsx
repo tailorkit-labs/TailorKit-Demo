@@ -293,7 +293,7 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
                   </Button>
                   <Button type="submit">
                     <SendIcon data-icon="inline-start" />
-                    Save demo message
+                    Save message
                   </Button>
                 </DialogFooter>
               </form>
@@ -301,13 +301,12 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
           </Dialog>
         </div>
       </AppPageHeading>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <p>Every conversation, in one place.</p>
-        <span className="flex items-center gap-2">
-          <Badge variant="outline">Demo inbox</Badge>Sample emails · replies saved in this browser
-        </span>
-      </div>
-      <div className="grid h-[calc(100dvh-18rem)] min-h-[360px] md:h-[calc(100dvh-11rem)] md:min-h-[400px] min-w-0 overflow-hidden rounded-xl border bg-background md:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_220px]">
+      <div
+        className={cn(
+          "grid min-h-0 flex-1 min-w-0 overflow-hidden md:grid-cols-[320px_minmax(0,1fr)]",
+          details && "xl:grid-cols-[320px_minmax(0,1fr)_240px]",
+        )}
+      >
         <section
           aria-label="Conversations"
           className={cn(
@@ -315,14 +314,14 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
             selectedId !== null && "max-md:hidden",
           )}
         >
-          <div className="flex flex-col gap-4 border-b p-4">
+          <div className="flex flex-col gap-3 border-b p-4 md:px-5">
             <InputGroup>
               <InputGroupAddon>
                 <SearchIcon />
               </InputGroupAddon>
               <InputGroupInput
                 aria-label="Search conversations"
-                placeholder="Search conversations…"
+                placeholder="Search inbox…"
                 value={search}
                 onChange={(event) => {
                   setSearch(event.target.value);
@@ -332,7 +331,7 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
             </InputGroup>
             <ToggleGroup
               multiple={false}
-              variant="outline"
+              variant="default"
               size="sm"
               value={[filter]}
               aria-label="Inbox filter"
@@ -359,15 +358,22 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
                   aria-pressed={selected?.id === thread.id}
                   onClick={() => openThread(thread)}
                   className={cn(
-                    "flex w-full min-w-0 gap-3 border-b p-4 text-left transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring",
+                    "flex w-full min-w-0 gap-3 border-b border-border/50 p-4 md:px-5 text-left transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring",
                     selected?.id === thread.id && "bg-accent",
                   )}
                 >
                   <ContactAvatar contact={person} className="size-9 shrink-0" />
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="truncate text-sm font-medium">{person.name}</span>
-                      <span className="shrink-0 text-[10px] text-muted-foreground">
+                      <span
+                        className={cn(
+                          "truncate text-sm",
+                          thread.unread ? "font-semibold" : "font-medium",
+                        )}
+                      >
+                        {person.name}
+                      </span>
+                      <span className="shrink-0 text-xs text-muted-foreground">
                         {time(last.sentAt)}
                       </span>
                     </div>
@@ -378,7 +384,7 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
                       {last.direction === "outgoing" ? "You: " : ""}
                       {last.body}
                     </span>
-                    <span className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                    <span className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                       {person.company}
                       {thread.unread ? (
                         <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
@@ -408,7 +414,7 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
         >
           {selected && contact ? (
             <>
-              <div className="flex flex-col gap-3 border-b p-4 sm:p-5">
+              <div className="flex flex-col gap-3 border-b p-4 md:px-8 md:py-5">
                 <div className="flex items-center gap-3">
                   <Button
                     variant="ghost"
@@ -448,7 +454,6 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    className="xl:hidden"
                     aria-label="Toggle contact details"
                     aria-expanded={details}
                     onClick={() => setDetails(!details)}
@@ -459,7 +464,7 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
                 <h2 className="text-base font-semibold">{selected.subject}</h2>
               </div>
               <ScrollArea key={selected.id} className="flex-1" overscrollContain>
-                <div className="flex flex-col gap-6 p-4 sm:p-6">
+                <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 p-4 md:px-8 md:py-6">
                   {details ? (
                     <div className="flex flex-col gap-2 rounded-lg border p-4 xl:hidden">
                       <p className="text-sm font-medium">
@@ -481,21 +486,16 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
                     <article key={message.id} className="flex flex-col gap-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <Badge
-                            variant={message.direction === "incoming" ? "secondary" : "outline"}
-                          >
+                          <span className="text-sm font-medium">
                             {message.direction === "incoming" ? contact.name : "You"}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground">
+                          </span>
+                          <span className="text-xs text-muted-foreground">
                             {message.direction === "incoming"
                               ? "to you"
                               : `to ${contact.name.split(" ")[0]}`}
                           </span>
                         </div>
-                        <time
-                          dateTime={message.sentAt}
-                          className="text-[10px] text-muted-foreground"
-                        >
+                        <time dateTime={message.sentAt} className="text-xs text-muted-foreground">
                           {time(message.sentAt)}
                         </time>
                       </div>
@@ -507,7 +507,10 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
                   ))}
                 </div>
               </ScrollArea>
-              <form onSubmit={reply} className="flex shrink-0 flex-col gap-3 border-t p-4">
+              <form
+                onSubmit={reply}
+                className="mx-auto flex w-full max-w-3xl shrink-0 flex-col gap-3 p-4 md:px-8 md:pb-6"
+              >
                 <Field>
                   <FieldLabel htmlFor="inbox-reply" className="sr-only">
                     Reply to {contact.name}
@@ -524,19 +527,19 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
                     disabled={!ready || selected.archived}
                   />
                 </Field>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-[10px] text-muted-foreground">
-                    {selected.archived
-                      ? "Restore this conversation to reply."
-                      : "Demo replies are saved here. No email is sent."}
-                  </p>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {selected.archived ? (
+                    <p className="mr-auto text-xs text-muted-foreground">
+                      Restore this conversation to reply.
+                    </p>
+                  ) : null}
                   <Button
                     size="sm"
                     type="submit"
                     disabled={!ready || selected.archived || !drafts[selected.id]?.trim()}
                   >
                     <SendIcon data-icon="inline-start" />
-                    Save demo reply
+                    Save reply
                   </Button>
                 </div>
               </form>
@@ -550,7 +553,10 @@ export function InboxPage({ workspace, now }: { workspace: Workspace; now: strin
             </div>
           )}
         </section>
-        <aside aria-label="Contact details" className="hidden min-h-0 min-w-0 border-l xl:block">
+        <aside
+          aria-label="Contact details"
+          className={cn("hidden min-h-0 min-w-0 border-l", details && "xl:block")}
+        >
           <ScrollArea overscrollContain>
             {contact ? (
               <div className="flex flex-col gap-6 p-5">
