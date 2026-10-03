@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm run db:push && next build",
     "start": "next start",
     "lint": "vp lint .",
     "format": "vp fmt .",
     "typecheck": "tsc --noEmit",
-    "db:push": "drizzle-kit push",
+    "db:push": "node scripts/push-db.mjs",
+    "db:push:force": "drizzle-kit push --force",
+    "db:plan": "drizzle-kit push --explain --verbose",
+    "test:db-push": "node --test scripts/schema-plan.test.mjs scripts/read-schema-plan.test.mjs",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "test:db": "tsx scripts/test-db.ts"
