@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { Client } from "pg";
 import { isCompatiblePlan } from "./schema-plan.mjs";
+import { readSchemaPlan } from "./read-schema-plan.mjs";
 
 // Preview databases are isolated; local pushes keep Drizzle's normal workflow.
 const guarded =
@@ -21,11 +22,7 @@ if (!guarded) {
     // Serialize production pushes so another build cannot change the schema
     // between this dry run and the actual push.
     await client.query("SELECT pg_advisory_lock(739012345)");
-    const plan = JSON.parse(
-      execFileSync("drizzle-kit", ["push", "--explain", "--output=json"], {
-        encoding: "utf8",
-      }),
-    );
+    const plan = readSchemaPlan();
     if (!isCompatiblePlan(plan)) {
       console.error(JSON.stringify(plan, null, 2));
       throw new Error(
