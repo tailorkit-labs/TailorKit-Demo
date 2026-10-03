@@ -1,0 +1,53 @@
+{
+  "name": "website",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "vp lint .",
+    "format": "vp fmt .",
+    "typecheck": "tsc --noEmit",
+    "db:push": "drizzle-kit push",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "test:db": "tsx scripts/test-db.ts"
+  },
+  "dependencies": {
+    "@base-ui/react": "catalog:",
+    "@better-auth/drizzle-adapter": "catalog:",
+    "@daypicker/react": "catalog:",
+    "@neondatabase/serverless": "^1.1.0",
+    "better-auth": "catalog:",
+    "class-variance-authority": "catalog:",
+    "clsx": "catalog:",
+    "dotenv": "^18.0.5",
+    "drizzle-orm": "^1.0.0-rc.4",
+    "lucide-react": "catalog:",
+    "next": "16.3.8",
+    "next-themes": "catalog:",
+    "pg": "^8.23.1",
+    "react": "19.2.8",
+    "react-dnd": "catalog:",
+    "react-dnd-html5-backend": "catalog:",
+    "react-dnd-touch-backend": "catalog:",
+    "react-dom": "19.2.8",
+    "recharts": "catalog:",
+    "tailwind-merge": "catalog:",
+    "tw-animate-css": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/pg": "catalog:",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "drizzle-kit": "1.0.0-rc.4",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@12.8.1"
+}

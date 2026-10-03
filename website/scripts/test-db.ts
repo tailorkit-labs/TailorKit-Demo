@@ -1,0 +1,187 @@
+import "./test-env";
+import assert from "node:assert/strict";
+import { and, asc, count, desc, eq } from "drizzle-orm";
+import { auth } from "../lib/auth";
+import { db, pool } from "../lib/drizzle";
+import { activities, contacts, deals, tasks, tenants, user } from "../lib/schema";
+import { provisionForUser } from "../lib/provision";
+import {
+  createContactRecord,
+  updateContactRecord,
+  deleteContactRecord,
+} from "../lib/contact-operations";
+import { checkContact, RECORD_LIMIT } from "../lib/mutation-guards";
+import { moveDealRecord } from "../lib/deal-operations";
+
+async function main() {
+  const users: string[] = [];
+  try {
+    const response = await auth.api.signInAnonymous({ asResponse: true });
+    assert.equal(response.status, 200);
+    const payload = await response.json();
+    assert.equal(payload.user.isAnonymous, true);
+    users.push(payload.user.id);
+    const cookies = response.headers.get("set-cookie");
+    assert.ok(cookies?.includes("better-auth.session_token"));
+    const session = await auth.api.getSession({ headers: new Headers({ cookie: cookies! }) });
+    assert.equal(session?.user.id, payload.user.id);
+    const provisioned = await Promise.all(
+      Array.from({ length: 4 }, () => provisionForUser(payload.user.id)),
+    );
+    assert.equal(
+      new Set(provisioned.map((t) => t.id)).size,
+      1,
+      "Concurrent provisioning must create one tenant",
+    );
+    const tenant = provisioned[0];
+    assert.equal(tenant.setupVersion, 1);
+    for (const [table, expected] of [
+      [contacts, 30],
+      [deals, 18],
+      [tasks, 12],
+      [activities, 12],
+    ] as const) {
+      const [row] = await db
+        .select({ total: count() })
+        .from(table)
+        .where(eq(table.tenantId, tenant.id));
+      assert.equal(row.total, expected, "Seed counts must remain stable after concurrent retries");
+    }
+    const second = await auth.api.signInAnonymous({ asResponse: true });
+    const secondPayload = await second.json();
+    users.push(secondPayload.user.id);
+    const secondTenant = await provisionForUser(secondPayload.user.id);
+    const stageDeals = (stage: typeof deals.$inferSelect.stage) =>
+      db
+        .select()
+        .from(deals)
+        .where(and(eq(deals.tenantId, tenant.id), eq(deals.stage, stage)))
+        .orderBy(asc(deals.position), desc(deals.createdAt), asc(deals.id));
+    const [first, middle, last] = await stageDeals("qualified");
+    await moveDealRecord(tenant.id, {
+      id: first.id,
+      stage: "qualified",
+      targetId: last.id,
+      placement: "after",
+    });
+    assert.deepEqual(
+      (await stageDeals("qualified")).map((deal) => deal.id),
+      [middle.id, last.id, first.id],
+      "Sorting downward must persist",
+    );
+    await moveDealRecord(tenant.id, {
+      id: first.id,
+      stage: "qualified",
+      targetId: middle.id,
+      placement: "before",
+    });
+    assert.deepEqual(
+      (await stageDeals("qualified")).map((deal) => deal.id),
+      [first.id, middle.id, last.id],
+      "Sorting upward must persist",
+    );
+    const proposal = await stageDeals("proposal");
+    await moveDealRecord(tenant.id, { id: first.id, stage: "proposal", targetId: proposal[0].id });
+    const moved = await stageDeals("proposal");
+    assert.deepEqual(
+      moved.map((deal) => deal.id),
+      [first.id, ...proposal.map((deal) => deal.id)],
+      "Cross-stage drops must honor their insertion point",
+    );
+    assert.equal(moved[0].title, first.title, "Moving must preserve deal details");
+    assert.equal(moved[0].value, first.value);
+    await moveDealRecord(tenant.id, { id: first.id, stage: "qualified" });
+    assert.deepEqual(
+      (await stageDeals("qualified")).map((deal) => deal.id),
+      [middle.id, last.id, first.id],
+      "Dropping on column space must append",
+    );
+    const [foreignDeal] = await db.select().from(deals).where(eq(deals.tenantId, secondTenant.id));
+    await assert.rejects(
+      moveDealRecord(tenant.id, { id: foreignDeal.id, stage: "qualified" }),
+      /Deal not found/,
+    );
+    await assert.rejects(
+      moveDealRecord(tenant.id, { id: first.id, stage: "proposal", targetId: foreignDeal.id }),
+      /destination deal/,
+    );
+    assert.deepEqual(
+      (await stageDeals("qualified")).map((deal) => deal.id),
+      [middle.id, last.id, first.id],
+      "Rejected moves must leave the board unchanged",
+    );
+    const [foreignContact] = await db
+      .select()
+      .from(contacts)
+      .where(eq(contacts.tenantId, secondTenant.id));
+    const inaccessible = await db
+      .select()
+      .from(contacts)
+      .where(and(eq(contacts.id, foreignContact.id), eq(contacts.tenantId, tenant.id)));
+    assert.equal(
+      inaccessible.length,
+      0,
+      "Tenant-scoped lookup must not expose another tenant's contact",
+    );
+    const input = {
+      name: "Database Test",
+      email: "test@example.com",
+      company: "Test",
+      role: "Founder",
+      status: "lead" as const,
+    };
+    const id = await createContactRecord(tenant.id, input);
+    await updateContactRecord(tenant.id, id, { ...input, status: "customer" });
+    const [updated] = await db.select().from(contacts).where(eq(contacts.id, id));
+    assert.equal(updated.status, "customer");
+    await deleteContactRecord(tenant.id, id);
+    await assert.rejects(
+      updateContactRecord(tenant.id, foreignContact.id, input),
+      /Contact not found/,
+    );
+    await assert.rejects(deleteContactRecord(tenant.id, foreignContact.id), /Contact not found/);
+    await assert.rejects(
+      db.transaction((tx) => checkContact(tx, tenant.id, foreignContact.id)),
+      /Contact not found/,
+    );
+    const [unchanged] = await db.select().from(contacts).where(eq(contacts.id, foreignContact.id));
+    assert.equal(
+      unchanged.name,
+      foreignContact.name,
+      "Rejected cross-tenant writes must preserve the other workspace",
+    );
+    await assert.rejects(createContactRecord(tenant.id, { ...input, name: "", email: "invalid" }));
+    for (let i = 30; i < RECORD_LIMIT - 1; i++)
+      await createContactRecord(tenant.id, { ...input, name: `Limit test ${i}` });
+    const concurrent = await Promise.allSettled(
+      Array.from({ length: 5 }, () => createContactRecord(tenant.id, input)),
+    );
+    assert.equal(
+      concurrent.filter((r) => r.status === "fulfilled").length,
+      1,
+      "Only one concurrent insert can claim the last available slot",
+    );
+    assert.equal(concurrent.filter((r) => r.status === "rejected").length, 4);
+    const [total] = await db
+      .select({ total: count() })
+      .from(contacts)
+      .where(eq(contacts.tenantId, tenant.id));
+    assert.equal(total.total, RECORD_LIMIT, "Racing inserts must never exceed the 50-record limit");
+    await assert.rejects(createContactRecord(tenant.id, input), /50 records/);
+    console.log(
+      "PASS: real PostgreSQL anonymous auth + persistent session, concurrent/idempotent provisioning, saved pipeline sorting + positional stage moves, tenant isolation + rejected cross-tenant writes, validated CRUD, and concurrent 50-record limit enforcement.",
+    );
+  } finally {
+    for (const id of users) await db.delete(user).where(eq(user.id, id));
+    const remaining = await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.userId, users[0] ?? "missing"));
+    assert.equal(remaining.length, 0, "Deleting test accounts must cascade demo data");
+    await pool.end();
+  }
+}
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

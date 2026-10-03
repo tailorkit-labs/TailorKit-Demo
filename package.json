@@ -1,0 +1,30 @@
+{
+  "name": "tailorkit-demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ready": "pnpm check && pnpm --filter website test:db && pnpm build",
+    "dev": "vp run website#dev",
+    "prepare": "vp config",
+    "check": "vp check",
+    "lint": "vp lint",
+    "format": "vp fmt",
+    "build": "pnpm --filter website build",
+    "test": "pnpm --filter website test:db"
+  },
+  "devDependencies": {
+    "vercel": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.8.1",
+      "onFail": "download"
+    }
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}
