@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { isCompatiblePlan } from "./schema-plan.mjs";
 
 const plan = (...statements) => ({ status: "ok", statements, hints: [] });
@@ -17,7 +18,7 @@ await test("guarded pushes reject a missing direct URL before connecting to the 
     else env.DATABASE_URL_UNPOOLED = directURL;
     const result = spawnSync(
       process.execPath,
-      [new URL("./push-db.mjs", import.meta.url).pathname],
+      [fileURLToPath(new URL("./push-db.mjs", import.meta.url))],
       {
         env,
         encoding: "utf8",
