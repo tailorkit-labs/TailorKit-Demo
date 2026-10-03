@@ -88,11 +88,11 @@ export function DemoSetup() {
                     )}
                   >
                     {step > i ? (
-                      <CheckIcon className="size-4" />
+                      <CheckIcon className="size-4 shrink-0" />
                     ) : step === i && !error ? (
-                      <Spinner />
+                      <Spinner className="size-4 shrink-0" />
                     ) : (
-                      <span className="size-4 rounded-full border" />
+                      <span className="size-4 shrink-0 rounded-full border" />
                     )}
                     {label}
                   </div>
