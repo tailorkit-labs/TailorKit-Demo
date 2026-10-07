@@ -26,8 +26,7 @@ The env example contains a public development-only signing key: never copy that 
 - `/contacts`: search, relationship filters, create and drill into contacts.
 - `/contacts/[id]`: contact editing, related deals/tasks, notes and activity.
 - `/pipeline`: drag deals between stages or sort cards within a stage (order is saved), edit details, create and delete.
-- `/inbox`: sample email conversations, search, unread/archive filters, contact context, and demo replies saved per workspace in this browser. No email provider is connected.
-- `/tasks`: redirects to Inbox.
+- `/tasks`: all workspace follow-ups, including tasks without a contact, with creation, completion, and deletion controls.
 - `/settings`: demo session information and per-collection usage.
 
 Every query and mutation derives the workspace from the authenticated session. Record creation locks the tenant row before checking limits, so concurrent requests cannot exceed 50 contacts, deals, or tasks. User input is validated on the server. Activity history is capped at 50 entries.
