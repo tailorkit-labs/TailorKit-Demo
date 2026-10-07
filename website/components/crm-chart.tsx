@@ -108,7 +108,7 @@ export function CrmChart({ deals }: { deals: Deal[] }) {
                   <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
-              <CartesianGrid vertical={false} />
+              <CartesianGrid vertical={false} stroke="var(--border)" />
               <XAxis
                 dataKey="date"
                 tickLine={false}

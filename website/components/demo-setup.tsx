@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { CheckIcon, CommandIcon, ShieldCheckIcon } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
 import { provisionWorkspace } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -70,27 +71,25 @@ export function DemoSetup() {
     >
       <div className="flex w-full max-w-md flex-col gap-8">
         <div className="flex items-center justify-center gap-2">
-          <CommandIcon className="size-6" />
-          <span className="text-xl font-semibold tracking-tight">Forma</span>
+          <Image
+            src="/brand/tailorkit-mark-light.svg"
+            alt=""
+            width={24}
+            height={24}
+            className="shrink-0 dark:hidden"
+          />
+          <Image
+            src="/brand/tailorkit-mark-dark.svg"
+            alt=""
+            width={24}
+            height={24}
+            className="hidden shrink-0 dark:block"
+          />
+          <span className="text-xl font-semibold tracking-tight">TailorKit</span>
         </div>
         <Card>
           <CardHeader className="items-center text-center">
-            <div
-              className={cn(
-                "mb-3 flex size-14 items-center justify-center rounded-full bg-muted transition-transform duration-500",
-                step >= 2 && "scale-110",
-              )}
-            >
-              {step >= 2 ? <CheckIcon className="size-6" /> : <Spinner className="size-6" />}
-            </div>
-            <CardTitle>
-              {step >= 2 ? "Your workspace is ready" : "Making room for your next big idea"}
-            </CardTitle>
-            <CardDescription>
-              A private CRM, filled with possibilities.
-              <br />
-              No signup. Just a little time to settle in.
-            </CardDescription>
+            <CardTitle>Setting up your demo</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
             <Progress
@@ -108,11 +107,11 @@ export function DemoSetup() {
                     )}
                   >
                     {step > i ? (
-                      <CheckIcon className="size-4" />
+                      <CheckIcon className="size-4 shrink-0" />
                     ) : step === i && !error ? (
-                      <Spinner />
+                      <Spinner className="size-4 shrink-0" />
                     ) : (
-                      <span className="size-4 rounded-full border" />
+                      <span className="size-4 shrink-0 rounded-full border" />
                     )}
                     {label}
                   </div>
@@ -129,10 +128,6 @@ export function DemoSetup() {
             ) : null}
           </CardContent>
         </Card>
-        <p className="flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
-          <ShieldCheckIcon className="size-4" />
-          Your demo stays with this browser for 30 days.
-        </p>
       </div>
     </main>
   );
