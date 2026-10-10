@@ -633,7 +633,10 @@ function ContactDetail({ workspace, contact }: { workspace: Workspace; contact: 
               {tasks.length ? (
                 tasks.map((task) => <TaskRow key={task.id} task={task} workspace={workspace} />)
               ) : (
-                <NoResults title="No follow-ups" description="Add a follow-up from Inbox." />
+                <NoResults
+                  title="No follow-ups"
+                  description="Add a follow-up to plan your next step."
+                />
               )}
             </CardContent>
           </Card>
@@ -740,6 +743,31 @@ function ContactDetail({ workspace, contact }: { workspace: Workspace; contact: 
     </>
   );
 }
+function Tasks({ workspace }: { workspace: Workspace }) {
+  return (
+    <>
+      <PageHeading title="Follow-ups">
+        <RecordDialog kind="task" workspace={workspace} />
+      </PageHeading>
+      <Card>
+        <CardHeader>
+          <CardTitle>Workspace follow-ups</CardTitle>
+          <CardDescription>Keep track of the next step across every relationship.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {workspace.tasks.length ? (
+            workspace.tasks.map((task) => (
+              <TaskRow key={task.id} task={task} workspace={workspace} />
+            ))
+          ) : (
+            <NoResults title="No follow-ups" description="Add a follow-up to get started." />
+          )}
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
 function Settings({ workspace }: { workspace: Workspace }) {
   const usage = [
     { name: "Contacts", count: workspace.contacts.length },
@@ -777,7 +805,7 @@ export function CrmPages({
   contactId,
 }: {
   workspace: Workspace;
-  view: "overview" | "contacts" | "pipeline" | "settings";
+  view: "overview" | "contacts" | "pipeline" | "tasks" | "settings";
   contactId?: string;
 }) {
   if (contactId) {
@@ -796,6 +824,8 @@ export function CrmPages({
       return <Contacts workspace={workspace} />;
     case "pipeline":
       return <Pipeline workspace={workspace} />;
+    case "tasks":
+      return <Tasks workspace={workspace} />;
     case "settings":
       return <Settings workspace={workspace} />;
     default:
