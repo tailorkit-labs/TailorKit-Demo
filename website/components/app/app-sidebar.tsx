@@ -11,12 +11,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DemoProfile, SidebarLink } from "@/components/app/demo-profile";
 import { navigation } from "@/components/app/app-navigation";
 export function AppSidebar({ name }: { name: string }) {
   const pathname = usePathname();
+  const { isMobile } = useSidebar();
+
+  if (isMobile) return null;
+
   return (
     <Sidebar collapsible="offcanvas" variant="inset">
       <SidebarHeader className="px-4 pt-5 pb-3">
